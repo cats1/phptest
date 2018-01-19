@@ -71,17 +71,17 @@ function downFile($filename){
 	header("content-length:".filesize($filename));
 	readerfile($filename);
 }
-function dirSize($path){
+function dirSize($dir){
 	$sum = 0;
-	$handler = opendir($path);
+	$handler = opendir($dir);
 	while(($item = readdir($handler)) !== false){
 		if ($item!= "."&&$item!= "..") {
-			if (is_file($path."/".$item)) {
-		     	$sum += filesize($path."/".$item);
+			if (is_file($dir."/".$item)) {
+		     	$sum += filesize($dir."/".$item);
 		     }
-		     if (is_dir($path."/".$item)) {
+		     if (is_dir($dir."/".$item)) {
 		     	$func = __FUNCTION__;
-		     	$func($path."/".$item);
+		     	$func($dir."/".$item);
 		     }
 		}     
 	}

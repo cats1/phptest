@@ -1,120 +1,28 @@
 <?php
+ini_set('date.timezone','Asia/Shanghai');
 require_once "dir.func.php";
 require_once "file.func.php";
 require_once "common.func.php";
-$path = "page";
+$path = dirname(dirname(__FILE__));//取得当前文件的上一层目录名，结果：/Users/lana/lft 
 $path = $_REQUEST['path']?$_REQUEST['path']:$path;
-$act=$_REQUEST['act'];
-$filename=$_REQUEST['filename'];
+/*$act=$_REQUEST['act'];
+$filename=$_REQUEST['filename'];*/
 $info = readDirctory($path);
 $redirect = "index.php?path={$path}";
-//print_r($info);
-if($act == "createFile"){
-  /*echo $path,"--";
-  echo $filename;*/
-  $mes = createFile($path."/".$filename);
-  alertMes($mes,$redirect);
-} else if($act == "showContent") {
-  $content = file_get_contents($filename);
-  if (strlen($content)) {
-  	$newContent = highlight_string($content, true);
-	echo $newContent;
-	  //highlight_string($content);
-	  //highlight_file($filename);
-  } else {
-  	alertMes('文件内容为空',$redirect);
-  }
-  
-} else if($act == "editContent"){
-	$content = file_get_contents($filename);
-	$str = <<<EOF
-	<form action='index.php?act=doEdit' method='post'>
-      <textarea name="content" cols='190' rows='10'>{$content}</textarea><br/>
-      <input type="hidden" name="filename" value="{$filename}"/>
-      <input type="submit" value="修改文件内容"/>
-	</form>
-EOF;
-   echo $str;
-} else if ($act == 'doEdit') {
-  $content = $_REQUEST['content'];
-  //echo $content;
-  if (file_put_contents($filename,$content)) {
-  	$mes = "success";
-  } else {
-  	$mes = "error";
-  }
-  alertMes($mes,$redirect);
-} else if ($act == 'renameFile') {
-  $str = <<<EOF
-  <form action='index.php?act=dorRename' method='post'>
-  请填写新文件名<input type="text" name="newname" />
-  <input type="hidden" name="filename" value="{$filename}"/>
-      <input type="submit" value="重命名"/>
-	</form>
-EOF;
-echo $str;
-} else if ($act == 'dorRename') {
-  $newname = $_REQUEST['newname'];
-  $mes = renameFile($filename,$newname);
-  alertMes($mes,$redirect);
-} else if ($act == 'delFile') {
-  $mes = delFile($filename);
-  alertMes($mes,$redirect);
-} else if ($act == 'downFile') {
-  $mes = downFile($filename);
-  alertMes($mes,$redirect);
-}
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>php</title>
-	<script>
-		function show(dis){
-			document.getElementById(dis).style.display = "block"
-		}
-		function delFile(filename){
-			alert(filename);
-			if (window.confirm("确定删除？")) {
-              location.href="index.php?act=delFile&filename="+ filename;
-			}
-		}
-	</script>
+	<meta charset="utf-8">
+	<title>在线编辑页面</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<ul>
-	<li><a href="index.php"><span>主页</span></a></li>
-	<li><a href="#" onclick="show('createFile')"><span>创建文件</span></a></li>
-	<li><a href="#"><span>创建文件夹</span></a></li>
-	<li><a href="#"><span>上传文件</span></a></li>
-	<li><a href="#"><span>返回上级目录</span></a></li>
-</ul>
-<form action="index.php" method="post">
-<table border="1" width="100%" cellpadding="0" cellspacing="0">
-	<tr id="createFolder" style="display: none;">
-		<td>输入文件夹名</td>
-		<td>
-			<input type="text" name="dirname">
-			<input type="submit" value="创建文件夹">
-		</td>	
-	</tr>
-	<tr id="createFile" style="display: none;">
-		<td>输入文件名</td>
-		<td>
-			<input type="text" name="filename">
-			<input type="hidden" name="path" value="<?php echo $path;?>">
-			<input type="hidden" name="act" value="createFile">
-			<input type="submit" value="创建文件">
-		</td>	
-	</tr>
-	<tr id="uploadFile" style="display: none;">
-		<td>选择要上传的文件</td>
-		<td>
-			<input type="file" name="myFile">
-			<input type="submit" name="act" value="上传文件">
-		</td>	
-	</tr>
-	<tr>
+	<form action="index.php" method="post">
+	<table class="table table-striped">
+		<tr>
 		<td>编号</td>
 		<td>名称</td>
 		<td>类型</td>
@@ -127,42 +35,30 @@ echo $str;
 		<td>访问时间</td>
 		<td>操作</td>
 	</tr>
-	<?php
+		<?php
     if ($info['file']) {
     	$i = 1;
     	foreach($info['file'] as $val){
     		$p = $path."/".$val
     ?>
     <tr>
-    	<td><?php echo $i; ?></td>
+    <td><?php echo $i; ?></td>
     	<td><?php echo $val; ?></td>
-    	<td><?php echo filetype($p) == "file" ? "file_ico.png":"folder_ico.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
+    	<td><div class="fileicon"><i class="fa fa-file"></i></div></td>
     	<td><?php echo transByte(filesize($p)); ?></td>
-    	<td><?php $src = is_readable($p)? "correct.png":"error.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
-    	<td><?php $src = is_writable($p) ? "correct.png":"error.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
-    	<td><?php $src = is_executable($p) ? "correct.png":"error.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
-    	<td><?php echo filectime($p);?></td>
-    	<td><?php echo filectime($p);?></td>
-    	<td><?php echo filectime($p);?></td>
-    	<?php
-    	  $ext = strtolower(end(explode(".", $val)));
-    	  $imgageExt = array("gif","jpg","jpeg","png");
-    	  if (in_array($ext, $imgageExt)) {
-    	?>
-    	<!-- <a href="#" onclick=""><img src="page/d18.png" alt=""></a> -->
-    	<?php
-    	  	 
-    	  } else {}
-
-    	?>
+    	<td><?php $src = is_readable($p)? "fa-check":"fa-close"; ?><div class="checkicon check<?php echo $src; ?>"><i class="fa <?php echo $src; ?>"></i></div></td>
+    	<td><?php $src = is_writable($p)? "fa-check":"fa-close"; ?><div class="checkicon check<?php echo $src; ?>"><i class="fa <?php echo $src; ?>"></i></div></td>
+    	<td><?php $src = is_executable($p)? "fa-check":"fa-close"; ?><div class="checkicon check<?php echo $src; ?>"><i class="fa <?php echo $src; ?>"></i></div></td>
+    	<td><?php echo date("Y.m.d H:i:s",filectime($p));?></td>
+    	<td><?php echo date("Y.m.d H:i:s",filemtime($p));?></td>
+    	<td><?php echo date("Y.m.d H:i:s",fileatime($p));?></td>
     	<td>
-    		<a href="index.php?act=showContent&filename=<?php echo $p;?>">查看</a>
-    		<a href="index.php?act=editContent&filename=<?php echo $p;?>">修改</a>
-    		<a href="index.php?act=renameFile&filename=<?php echo $p;?>">重命名</a>
-    		<a href="#" onclick="delFile('<?php echo $p;?>')">删除</a>
-    		<a href="index.php?act=downFile&filename=<?php echo $p;?>">下载</a>
+    		<a href="#" title="查看" class="checkicon checkmess" onclick="showFileMessage('<?php echo $p?>')"><i class="fa fa-eye"></i></a>
+    		<a href="#" title="修改" class="checkicon" onclick="updateFileMessage('<?php echo $p?>')"><i class="fa fa-edit"></i></a>
+    		<a href="index.php?act=&filename=<?php echo $p;?>" title="重命名" class="checkicon"><i class="fa fa-cog"></i></a>
+    		<a href="index.php?act=&filename=<?php echo $p;?>" title="删除" class="checkicon"><i class="fa fa-trash-o"></i></a>
+    		<a href="index.php?act=&filename=<?php echo $p;?>" title="下载" class="checkicon"><i class="fa fa-cloud-download"></i></a>
     	</td>
-    	
     </tr>
     <?php
     $i++;
@@ -177,28 +73,54 @@ echo $str;
     <tr>
     	<td><?php echo $i; ?></td>
     	<td><?php echo $val; ?></td>
-    	<td><?php echo filetype($p) == "file" ? "file_ico.png":"folder_ico.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
-    	<td><?php echo dirSize($p); ?></td>
-    	<td><?php $src = is_readable($p)? "correct.png":"error.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
-    	<td><?php $src = is_writable($p) ? "correct.png":"error.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
-    	<td><?php $src = is_executable($p) ? "correct.png":"error.png"; ?><img src="<?php echo $src; ?>" alt="" /></td>
-    	<td><?php echo filectime($p);?></td>
-    	<td><?php echo filectime($p);?></td>
-    	<td><?php echo filectime($p);?></td>
+    	<td><div class="foldericon"><i class="fa fa-folder"></i></div></td>
+    	<td><?php echo transByte($p); ?></td>
+    	<td><?php $src = is_readable($p)? "fa-check":"fa-close"; ?><div class="checkicon check<?php echo $src; ?>"><i class="fa <?php echo $src; ?>"></i></div></td>
+    	<td><?php $src = is_writable($p)? "fa-check":"fa-close"; ?><div class="checkicon check<?php echo $src; ?>"><i class="fa <?php echo $src; ?>"></i></div></td>
+    	<td><?php $src = is_executable($p)? "fa-check":"fa-close"; ?><div class="checkicon check<?php echo $src; ?>"><i class="fa <?php echo $src; ?>"></i></div></td>
+    	<td><?php echo date("Y.m.d H:i:s",filectime($p));?></td>
+    	<td><?php echo date("Y.m.d H:i:s",filemtime($p));?></td>
+    	<td><?php echo date("Y.m.d H:i:s",fileatime($p));?></td>
     	<td>
-    		<a href="index.php?path=<?php echo $p;?>">查看</a>
-    		<a href="index.php?act=renameFile&filename=<?php echo $p;?>">重命名</a>
-    		<a href="#" onclick="delFile('<?php echo $p;?>')">删除</a>
-    		<a href="index.php?act=downFile&filename=<?php echo $p;?>">下载</a>
+    		<a href="index.php?path=<?php echo $p;?>" title="查看" class="checkicon checkmess"><i class="fa fa-eye"></i></a>
+    		<a href="index.php?act=&filename=<?php echo $p;?>" title="修改" class="checkicon"><i class="fa fa-edit"></i></a>
+    		<a href="index.php?act=&filename=<?php echo $p;?>" title="重命名" class="checkicon"><i class="fa fa-cog"></i></a>
+    		<a href="index.php?act=&filename=<?php echo $p;?>" title="删除" class="checkicon"><i class="fa fa-trash-o"></i></a>
+    		<a href="index.php?act=&filename=<?php echo $p;?>" title="下载" class="checkicon" ><i class="fa fa-cloud-download"></i></a>
     	</td>
-    	
     </tr>
     <?php
     $i++;
     }	
     }
     ?>
-</table>
+	</ul>
+
 </form>
+<!-- Modal -->
+<div class="modal fade bd-example-modal-lg" id="showmessmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content ">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">展示</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="word-break: break-all;">
+        <div class="showmess" id="modalshowbody"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="js/lib/jquery-3.2.1.min.js"></script>
+<script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="js/index.js"></script>
 </body>
 </html>
